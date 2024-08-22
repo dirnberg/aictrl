@@ -3,46 +3,58 @@
 api_key: "your-openai-api-key"
 
 assistant:
-  name: "Cybersecurity Legal Advisor"
+  name: "AICTRL POC"
   model: "gpt-4o"
   instructions_file_path: "prompts/instructions.md"
-  placeholders:
-    language: "German"
   tools:
     - "file_search"
     - "code_interpreter"
   max_tokens: 1500
-  temperature: 0.7
+  temperature: 1
   top_p: 0.9
   frequency_penalty: 0.0
   presence_penalty: 0.0
 
 thread:
-  query_file_path: "prompts/query.md"
-  placeholders:
-    language: "German"
-
+  query_file_path: "prompts/linkedin.md"
   attachment_paths:
     - "knowledge/legal/EU-NIS2.pdf"
     - "knowledge/legal/EU-CRA.pdf"
+    - "knowledge/legal/EU_legislation_directives_2024.md"
+  placeholrders:
+    industry: "Cybersicherheit"
+    target_audience: "IT-Sicherheitsexperten"
+    topic: "Die Zukunft der Künstlichen Intelligenz in der Cybersicherheit"
+    key_topic1: "Aktueller Stand der KI in der Cybersicherheit"
+    key_topic2: "Technologien zur Lösung spezifischer Herausforderungen"
+    key_topic3: "Langfristige Perspektiven und Herausforderungen"
+    specific_issue: "die Zunahme von Phishing-Attacken"
+    recommendation1: "Investiere in KI-gestützte Sicherheitssysteme"
+    recommendation2: "Nutze maschinelles Lernen zur Echtzeit-Bedrohungserkennung"
+    recommendation3: "Entwickle eine kontinuierliche Strategie zur Verbesserung deiner KI-basierten Sicherheitssysteme"
+    person: "IT-Sicherheitsexperte"
+    language: "German"
+    
 
-vector_store:
-  name: "Cybersecurity Legal Documents"
-
-folders:
-  raw: "raw"
-  prompts: "prompts"
-  outputs: "outputs"
 
 chat_completion:
   model: "gpt-4o-mini"
   max_tokens: 1500
-  temperature: 0.7
+  temperature: 1
   top_p: 0.9
   frequency_penalty: 0.0
   presence_penalty: 0.0
   prompt_file_path: "prompts/convert_to_markdown.md"
   placeholders:
+    topic: "Cybersecurity Laws"
+    person: "Legal Expert"
     language: "German"
 
 
+vector_store:
+  name: "AICTRL DOC Store"
+
+folders:
+  raw: "raw"
+  prompts: "prompts"
+  outputs: "outputs"

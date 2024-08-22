@@ -7,7 +7,7 @@ import re
 import time
 import argparse
 import shutil
-from tqdm import tqdm
+shutil.copy
 
 # Initialize logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
@@ -18,11 +18,8 @@ total_data_sent, total_data_received = 0, 0
 
 def load_config(file_path):
     try:
-        with tqdm(total=100, desc="Loading Config") as pbar:
-            with open(file_path, 'r') as file:
-                config = yaml.safe_load(file)
-            pbar.update(100)
-            return config
+        with open(file_path, 'r') as file:
+            return yaml.safe_load(file)
     except Exception as e:
         logger.error(f"Error loading config: {e}")
         return None
@@ -32,25 +29,8 @@ def ensure_directory_exists(directory_path):
         os.makedirs(directory_path)
 
 def apply_placeholders(template, placeholders):
-    logger.info("Starting placeholder replacement process.")
-    missing_placeholders = []
-
-    with tqdm(total=len(placeholders), desc="Replacing Placeholders") as pbar:
-        for key, value in placeholders.items():
-            if f"{{{{ {key} }}}}" in template:
-                logger.info(f"Replacing placeholder: {{{{ {key} }}}} with value: {value}")
-                template = template.replace(f"{{{{ {key} }}}}", value)
-            else:
-                logger.warning(f"Placeholder {{{{ {key} }}}} not found in the template.")
-                missing_placeholders.append(key)
-            pbar.update(1)
-
-    remaining_placeholders = re.findall(r'{{\s*([^}]+)\s*}}', template)
-    if remaining_placeholders:
-        logger.warning(f"The following placeholders were not replaced: {remaining_placeholders}")
-    else:
-        logger.info("All placeholders successfully replaced.")
-
+    for key, value in placeholders.items():
+        template = template.replace(f"{{{{ {key} }}}}", value)
     return template
 
 def generate_filename(prefix, assistant_name, max_length=12):
@@ -131,22 +111,17 @@ def convert_text_to_markdown(client, input_file, output_file, params):
             input_content = file.read().strip()
         prompt_template = open(params['prompt_file_path'], 'r').read()
         prompt = apply_placeholders(prompt_template, params['placeholders']) + f"\n\nText to format:\n\n{input_content}"
-        
-        with tqdm(total=100, desc="Converting Text to Markdown") as pbar:
-            completion = client.chat.completions.create(
-                model=params['model'],
-                messages=[{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": prompt}],
-                max_tokens=params['max_tokens'],
-                temperature=params['temperature'],
-                top_p=params['top_p'],
-                frequency_penalty=params['frequency_penalty'],
-                presence_penalty=params['presence_penalty']
-            )
-            pbar.update(50)
-            
-            with open(output_file, 'w') as file:
-                file.write(completion.choices[0].message.content)
-            pbar.update(50)
+        completion = client.chat.completions.create(
+            model=params['model'],
+            messages=[{"role": "system", "content": "You are a helpful assistant."}, {"role": "user", "content": prompt}],
+            max_tokens=params['max_tokens'],
+            temperature=params['temperature'],
+            top_p=params['top_p'],
+            frequency_penalty=params['frequency_penalty'],
+            presence_penalty=params['presence_penalty']
+        )
+        with open(output_file, 'w') as file:
+            file.write(completion.choices[0].message.content)
     except Exception as e:
         logger.error(f"Error converting text to Markdown: {e}")
 
@@ -187,53 +162,35 @@ def main():
         logger.error(f"Query file '{query_file_path}' not found.")
         return
 
-    prompt_file_path = chat_params.get('prompt_file_path')
-    if not os.path.isfile(prompt_file_path):
-        logger.error(f"Prompt file '{prompt_file_path}' not found.")
+    instructions = open(instructions_file_path, 'r').read()
+    query = open(query_file_path, 'r').read()
+
+    assistant = get_or_create_assistant(client, {
+        'name': assistant_params['name'],
+        'instructions': instructions,
+        'model': assistant_params['model'],
+        'tools': assistant_params['tools']
+    })
+    if not assistant:
         return
 
-    # Apply placeholders to the instructions, query, and prompt file content
-    instructions = open(instructions_file_path, 'r').read()
-    instructions = apply_placeholders(instructions, config.get('placeholders', {}))
+    vector_store = get_or_create_vector_store(client, config['vector_store']['name'])
+    if not vector_store:
+        return
 
-    query = open(query_file_path, 'r').read()
-    query = apply_placeholders(query, thread_params.get('placeholders', {}))
+    thread = create_thread(client, assistant, query, thread_params['attachment_paths'])
+    if not thread:
+        return
 
-    prompt = open(prompt_file_path, 'r').read()
-    prompt = apply_placeholders(prompt, chat_params.get('placeholders', {}))
+    raw_output = run_assistant_and_get_output(client, assistant, thread, chat_params)
+    if not raw_output:
+        return
 
-    with tqdm(total=100, desc="Processing Assistant and Thread") as pbar:
-        assistant = get_or_create_assistant(client, {
-            'name': assistant_params['name'],
-            'instructions': instructions,
-            'model': assistant_params['model'],
-            'tools': assistant_params['tools']
-        })
-        pbar.update(20)
-        if not assistant:
-            return
-
-        vector_store = get_or_create_vector_store(client, config['vector_store']['name'])
-        pbar.update(20)
-        if not vector_store:
-            return
-
-        thread = create_thread(client, assistant, query, thread_params['attachment_paths'])
-        pbar.update(20)
-        if not thread:
-            return
-
-        raw_output = run_assistant_and_get_output(client, assistant, thread, chat_params)
-        pbar.update(20)
-        if not raw_output:
-            return
-
-        raw_output_filename = generate_filename("raw", assistant_params['name'])
-        raw_output_path = os.path.join(folders['raw'], raw_output_filename)
-        with open(raw_output_path, 'w') as raw_file:
-            raw_file.write(raw_output)
-        logger.info(f"Raw output saved to '{raw_output_path}'.")
-        pbar.update(20)
+    raw_output_filename = generate_filename("raw", assistant_params['name'])
+    raw_output_path = os.path.join(folders['raw'], raw_output_filename)
+    with open(raw_output_path, 'w') as raw_file:
+        raw_file.write(raw_output)
+    logger.info(f"Raw output saved to '{raw_output_path}'.")
 
     try:
         last_raw_output_path = os.path.join(folders['raw'], 'last_raw_output.md')
