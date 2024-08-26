@@ -1,60 +1,133 @@
-# config.yml
-
-api_key: "your-openai-api-key"
+openai_api_key: "your_openai_api_key"
 
 assistant:
-  name: "AICTRL POC"
+  name: "LEGAL POC"
+  instructions_file: "prompts/instructions.md"
+  instructions_placeholders:
+    language: "German"
+    role: "content assistant"
   model: "gpt-4o"
-  instructions_file_path: "prompts/instructions.md"
   tools:
-    - "file_search"
-    - "code_interpreter"
-  max_tokens: 1500
-  temperature: 1
-  top_p: 0.9
-  frequency_penalty: 0.0
-  presence_penalty: 0.0
-
-thread:
-  query_file_path: "prompts/linkedin.md"
-  attachment_paths:
-    - "knowledge/legal/EU-NIS2.pdf"
-    - "knowledge/legal/EU-CRA.pdf"
-    - "knowledge/legal/EU_legislation_directives_2024.md"
-  placeholrders:
-    industry: "Cybersicherheit"
-    target_audience: "IT-Sicherheitsexperten"
-    topic: "Die Zukunft der Künstlichen Intelligenz in der Cybersicherheit"
-    key_topic1: "Aktueller Stand der KI in der Cybersicherheit"
-    key_topic2: "Technologien zur Lösung spezifischer Herausforderungen"
-    key_topic3: "Langfristige Perspektiven und Herausforderungen"
-    specific_issue: "die Zunahme von Phishing-Attacken"
-    recommendation1: "Investiere in KI-gestützte Sicherheitssysteme"
-    recommendation2: "Nutze maschinelles Lernen zur Echtzeit-Bedrohungserkennung"
-    recommendation3: "Entwickle eine kontinuierliche Strategie zur Verbesserung deiner KI-basierten Sicherheitssysteme"
-    person: "IT-Sicherheitsexperte"
-    language: "German"
-    
-
-
-chat_completion:
-  model: "gpt-4o-mini"
-  max_tokens: 1500
-  temperature: 1
-  top_p: 0.9
-  frequency_penalty: 0.0
-  presence_penalty: 0.0
-  prompt_file_path: "prompts/convert_to_markdown.md"
-  placeholders:
-    topic: "Cybersecurity Laws"
-    person: "Legal Expert"
-    language: "German"
-
+    - type: "file_search"
+    - type: "code_interpreter"
+  parameters:
+    temperature: 0.1
+    top_p: 0.9
+    frequency_penalty: 0.0
+    presence_penalty: 0.0
 
 vector_store:
-  name: "AICTRL DOC Store"
+  name: "LEGAL DOC"
+  file_paths:
+    - "knowledge/legal/EU-CER.pdf"
+    - "knowledge/legal/EU-CRA.pdf"
+    - "knowledge/legal/EU-NIS2.pdf"
 
-folders:
-  raw: "raw"
-  prompts: "prompts"
-  outputs: "outputs"
+threads:
+  - name: "NIS2 Rechtsauskunft - Datacenter"
+    message:
+      role: "user"
+      content_file: "prompts/legal.md"
+    placeholders:
+      language: "German"
+      tone: "Legal Professional"
+      topic_or_law: "EU-NIS2"
+      emotion: "Reassuring"
+      special_note: "Laut tiefgründiger Prüfung stellen wir fest, dass ihr Unternehmen in als Betreiber eines Datacenter, als wesentliche Einrichtung fällt."
+      client_provided_facts: "IT Dienstleister, Betrieb eines Data Center, 260 Mitarbeiter, 3 Standorte in Österreich, 80 Mio Umsatz"
+    output_file_path: "20240826-Gutachten REF-2024-00123.md"
+    temperature: 0.1
+    top_p: 0.9
+    completion:
+      model: "gpt-4o"
+      temperature: 0.1
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      prompt_file: "prompts/convert_to_markdown.md"
+      placeholders:
+        language: "German"
+        paper: "Text für eine Rechtsauskunft"
+        form: "Textblock"
+      completion_output_file: true
+
+  - name: "NIS2 Rechtsauskunft - Produktion"
+    message:
+      role: "user"
+      content_file: "prompts/legal.md"
+    placeholders:
+      language: "German"
+      tone: "High Legal Professional"
+      topic_or_law: "EU-NIS2"
+      emotion: "Reassuring"
+      special_note: "Laut tiefgründiger Prüfung stellen wir fest, dass ihr Unternehmen als Produktion..... NIS2.... jedoch muss die Lage sehr genau geprüft werden."
+      client_provided_facts: "Produktion mit Betrieb eines Data Center, 8000 Mitarbeiter, 25 Standorte in Europa, 4000 Mio Umsatz"
+    output_file_path: "20240826-Gutachten REF-2024-00523.md"
+    temperature: 0.1
+    top_p: 0.9
+    completion:
+      model: "gpt-4o-mini"
+      temperature: 0.1
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      prompt_file: "prompts/convert_to_markdown.md"
+      placeholders:
+        language: "German"
+        paper: "Text für eine Rechtsauskunft"
+        form: "Textblock"
+      completion_output_file: true
+
+  - name: "NIS2/CER Rechtsauskunft"
+    message:
+      role: "user"
+      content_file: "prompts/legal.md"
+    placeholders:
+      language: "German"
+      tone: "High Legal Professional"
+      topic_or_law: "EU-NIS2, EU-CER"
+      emotion: "Reassuring"
+      special_note: "Laut tiefgründiger Prüfung stellen wir fest, dass ihr Unternehmen als .... NIS2... jedoch muss die Lage sehr genau geprüft werden. Die genaue österreichische Gesetzgebung ist noch nicht vom Parlament verabschiedet worden. .... EU-CER..... wird vorbehaltlich ein Bescheid von der Behörde erstellt."
+      client_provided_facts: "Energieversorger, 60 Mitarbeiter, 2 Standorte in Österreich, 10 Mio Umsatz"
+    output_file_path: "20240826-Gutachten REF-2024-08999.md"
+    temperature: 0.1
+    top_p: 0.9
+    completion:
+      model: "gpt-4o-mini"
+      temperature: 0.1
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      prompt_file: "prompts/convert_to_markdown.md"
+      placeholders:
+        language: "German"
+        paper: "Text für eine Rechtsauskunft"
+        form: "Textblock"
+      completion_output_file: true
+
+  - name: "CRA Rechtsauskunft"
+    message:
+      role: "user"
+      content_file: "prompts/legal.md"
+    placeholders:
+      language: "German"
+      tone: "High Legal Professional"
+      topic_or_law: "EU-CRA"
+      emotion: "Reassuring"
+      special_note: "Laut tiefgründiger Prüfung stellen wir fest, dass ihr Unternehmen die EU-CRA Richtline wie folgt umsetzen."
+      client_provided_facts: "IT Systemhaus, Software Entwicklung für kritische Infrastruktur, 1 Standort in Österreich, 60 Mitarbeiter, 10 Mio Umsatz"
+    output_file_path: "20240826-Gutachten REF-2024-12345.md"
+    temperature: 0.1
+    top_p: 0.9
+    completion:
+      model: "gpt-4o-mini"
+      temperature: 0.1
+      top_p: 0.9
+      frequency_penalty: 0.0
+      presence_penalty: 0.0
+      prompt_file: "prompts/convert_to_markdown.md"
+      placeholders:
+        language: "German"
+        paper: "Text für eine Rechtsauskunft"
+        form: "Textblock"
+      completion_output_file: true

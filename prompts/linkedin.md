@@ -38,6 +38,8 @@
 
     Beispieltext:
 
+    prompt: "Generiere für den folgenden Satz einer gute Alternative die sehr gut zum Thema passt".
+
     🌍 Wie sieht die Zukunft von {{ Topic }} in der {{ Industry }} aus?
 
     Die {{ Industry }} durchläuft gerade spannende Zeiten! Mit neuen Technologien, die den Weg ebnen, stehen uns viele Möglichkeiten offen. Doch wie können wir diese Entwicklungen bestmöglich nutzen? 💭
